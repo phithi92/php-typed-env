@@ -24,7 +24,6 @@ final class IntCasterTest extends TestCase
         $caster = new IntCaster();
 
         $this->expectException(InvalidArgumentException::class);
-        // Fehlermeldung enthält Key und Originalwert
         $this->expectExceptionMessageMatches("/^ENV N: '.*' is not a valid int$/");
 
         $caster->cast('N', $raw);

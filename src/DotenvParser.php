@@ -48,7 +48,7 @@ final class DotenvParser
         return $result;
     }
 
-    /** ---------- helpers ---------- */
+    // ---------- Helpers ---------------------------------------------------
 
     private function openHandle(string $path): SplFileObject
     {

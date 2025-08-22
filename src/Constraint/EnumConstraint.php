@@ -21,7 +21,7 @@ final class EnumConstraint implements ConstraintInterface
     /** @param mixed $value @return scalar */
     public function assert(string $key, mixed $value): mixed
     {
-        // Harte Eingrenzung: Enum arbeitet nur mit skalaren Werten
+        // only work with scalar values
         if (! is_scalar($value)) {
             throw new InvalidArgumentException(sprintf(
                 'ENV %s: unsupported non-scalar value %s for EnumConstraint',
@@ -31,10 +31,8 @@ final class EnumConstraint implements ConstraintInterface
         }
 
         if (! in_array($value, $this->allowed, true)) {
-            // keine (string)-Casts auf mixed: strval() + vorher list<scalar>
             $list = implode(', ', array_map('strval', $this->allowed));
 
-            // keine Interpolation von $value (mixed): var_export → string
             throw new InvalidArgumentException(sprintf(
                 'ENV %s: %s not in [%s]',
                 $key,

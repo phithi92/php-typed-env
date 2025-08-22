@@ -11,8 +11,6 @@ use Phithi92\TypedEnv\Contracts\ConstraintInterface;
 
 final class KeyRuleTest extends TestCase
 {
-    // ---------- Hilfsmethoden ------------------------------------------------
-
     private function spyCaster(mixed $returns, ?array &$calls = null): CasterInterface
     {
         return new class ($returns, $calls) implements CasterInterface {
