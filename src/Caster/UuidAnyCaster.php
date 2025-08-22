@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Phithi92\TypedEnv\Caster;
 
-use InvalidArgumentException;
 use Phithi92\TypedEnv\Contracts\CasterInterface;
+use Phithi92\TypedEnv\Exception\CastException;
 
 final class UuidAnyCaster implements CasterInterface
 {
@@ -13,7 +13,7 @@ final class UuidAnyCaster implements CasterInterface
     public function cast(string $key, string $raw): string
     {
         if (preg_match(self::UUID_REGEX, $raw) !== 1) {
-            throw new InvalidArgumentException("ENV {$key}: '{$raw}' is not a valid UUID");
+            throw new CastException("ENV {$key}: '{$raw}' is not a valid UUID");
         }
         return $raw;
     }

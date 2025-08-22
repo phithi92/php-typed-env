@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Phithi92\TypedEnv;
 
-use RuntimeException;
+use Phithi92\TypedEnv\Exception\MissingEnvVariableException;
 
 final class EnvKit
 {
@@ -47,7 +47,7 @@ final class EnvKit
                     continue;
                 }
                 if ($rule->isRequired()) {
-                    throw new RuntimeException("Missing environment variable: {$key}");
+                    throw new MissingEnvVariableException("Missing environment variable: {$key}");
                 }
                 // Optional without default → skip
                 continue;

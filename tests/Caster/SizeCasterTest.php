@@ -6,7 +6,7 @@ namespace Phithi92\TypedEnv\Tests\Caster;
 
 use PHPUnit\Framework\TestCase;
 use Phithi92\TypedEnv\KeyRule;
-use InvalidArgumentException;
+use Phithi92\TypedEnv\Exception\CastException;
 
 final class SizeCasterTest extends TestCase
 {
@@ -21,7 +21,7 @@ final class SizeCasterTest extends TestCase
     public function testInvalidSize(): void
     {
         $r = (new KeyRule('S'))->typeSize();
-        $this->expectException(InvalidArgumentException::class);
+        $this->expectException(CastException::class);
         $r->apply('5xb');
     }
 }

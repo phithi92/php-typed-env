@@ -5,6 +5,7 @@ namespace Phithi92\TypedEnv\Tests;
 use PHPUnit\Framework\TestCase;
 use Phithi92\TypedEnv\EnvKit;
 use Phithi92\TypedEnv\Schema;
+use Phithi92\TypedEnv\Exception\MissingEnvVariableException;
 
 final class EnvKitTest extends TestCase
 {
@@ -62,7 +63,7 @@ ENV);
         $schema = Schema::build();
         $schema->string('MISSING'); // required by default
 
-        $this->expectException(\RuntimeException::class);
+        $this->expectException(MissingEnvVariableException::class);
         (new EnvKit())->loadDotenv($path)->validate($schema);
     }
 

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Phithi92\TypedEnv\Constraint;
 
-use InvalidArgumentException;
+use Phithi92\TypedEnv\Exception\ConstraintException;
 
 final class IsReadableConstraint extends AbstractPathConstraint
 {
@@ -12,7 +12,7 @@ final class IsReadableConstraint extends AbstractPathConstraint
     {
         $p = self::path($value);
         if (! is_readable($p)) {
-            throw new InvalidArgumentException("path '{$p}' is not readable");
+            throw new ConstraintException("path '{$p}' is not readable");
         }
         return $p;
     }

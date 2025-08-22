@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Phithi92\TypedEnv\Caster;
 
-use InvalidArgumentException;
 use Phithi92\TypedEnv\Contracts\CasterInterface;
+use Phithi92\TypedEnv\Exception\CastException;
 
 final class ColorCaster implements CasterInterface
 {
@@ -27,7 +27,7 @@ final class ColorCaster implements CasterInterface
     public function cast(string $key, string $raw): string
     {
         if (preg_match(self::RGB_REGEX, $raw) !== 1 && preg_match(self::RGBA_REGEX, $raw) !== 1) {
-            throw new InvalidArgumentException("Environment variable '{$key}' must be a valid HEX or RGB(A) color.");
+            throw new CastException("Environment variable '{$key}' must be a valid HEX or RGB(A) color.");
         }
 
         return $raw;

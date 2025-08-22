@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Phithi92\TypedEnv\Tests\Caster;
 
-use InvalidArgumentException;
+use Phithi92\TypedEnv\Exception\CastException;
 use Phithi92\TypedEnv\Caster\IntCaster;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
@@ -23,7 +23,7 @@ final class IntCasterTest extends TestCase
     {
         $caster = new IntCaster();
 
-        $this->expectException(InvalidArgumentException::class);
+        $this->expectException(CastException::class);
         $this->expectExceptionMessageMatches("/^ENV N: '.*' is not a valid int$/");
 
         $caster->cast('N', $raw);

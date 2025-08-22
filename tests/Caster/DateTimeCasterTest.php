@@ -7,7 +7,7 @@ namespace Phithi92\TypedEnv\Tests\Caster;
 use PHPUnit\Framework\TestCase;
 use Phithi92\TypedEnv\KeyRule;
 use DateTimeImmutable;
-use InvalidArgumentException;
+use Phithi92\TypedEnv\Exception\CastException;
 
 final class DateTimeCasterTest extends TestCase
 {
@@ -22,7 +22,7 @@ final class DateTimeCasterTest extends TestCase
     public function testInvalidDate(): void
     {
         $r = (new KeyRule('D'))->typeDateTime('Y-m-d');
-        $this->expectException(InvalidArgumentException::class);
+        $this->expectException(CastException::class);
         $r->apply('2024-02-30');
     }
 }

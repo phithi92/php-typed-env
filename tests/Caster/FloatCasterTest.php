@@ -6,7 +6,7 @@ namespace Phithi92\TypedEnv\Tests\Caster;
 
 use PHPUnit\Framework\TestCase;
 use Phithi92\TypedEnv\KeyRule;
-use InvalidArgumentException;
+use Phithi92\TypedEnv\Exception\CastException;
 
 final class FloatCasterTest extends TestCase
 {
@@ -20,7 +20,7 @@ final class FloatCasterTest extends TestCase
     public function testInvalidFloats(): void
     {
         $r = (new KeyRule('F'))->typeFloat();
-        $this->expectException(InvalidArgumentException::class);
+        $this->expectException(CastException::class);
         $r->apply('abc');
     }
 }

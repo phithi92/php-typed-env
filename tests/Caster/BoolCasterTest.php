@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Phithi92\TypedEnv\Tests\Caster;
 
-use InvalidArgumentException;
+use Phithi92\TypedEnv\Exception\CastException;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Phithi92\TypedEnv\KeyRule;
@@ -28,7 +28,7 @@ final class BoolCasterTest extends TestCase
     public function testInvalidBool(): void
     {
         $rule = (new KeyRule('FLAG'))->typeBool();
-        $this->expectException(InvalidArgumentException::class);
+        $this->expectException(CastException::class);
         $rule->apply('maybe');
     }
 

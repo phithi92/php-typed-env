@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Phithi92\TypedEnv\Constraint;
 
-use InvalidArgumentException;
+use Phithi92\TypedEnv\Exception\ConstraintException;
 
 final class ExistsConstraint extends AbstractPathConstraint
 {
@@ -12,7 +12,7 @@ final class ExistsConstraint extends AbstractPathConstraint
     {
         $path = self::path($value);
         if (! $this->isFileOrDirectory($path)) {
-            throw new InvalidArgumentException("path '{$path}' does not exist");
+            throw new ConstraintException("path '{$path}' does not exist");
         }
         return $path;
     }

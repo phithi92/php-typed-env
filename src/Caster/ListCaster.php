@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Phithi92\TypedEnv\Caster;
 
-use InvalidArgumentException;
 use Phithi92\TypedEnv\Contracts\CasterInterface;
+use Phithi92\TypedEnv\Exception\CastException;
 
 final class ListCaster implements CasterInterface
 {
@@ -14,7 +14,7 @@ final class ListCaster implements CasterInterface
     public function __construct(string $delimiter = ',', private bool $allowEmpty = false)
     {
         if ($delimiter === '') {
-            throw new InvalidArgumentException('Delimiter must not be empty');
+            throw new CastException('Delimiter must not be empty');
         }
 
         $this->delimiter = $delimiter;

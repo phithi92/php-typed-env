@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Phithi92\TypedEnv\Caster;
 
-use InvalidArgumentException;
 use Phithi92\TypedEnv\Contracts\CasterInterface;
+use Phithi92\TypedEnv\Exception\CastException;
 
 final class BoolCaster implements CasterInterface
 {
@@ -13,7 +13,7 @@ final class BoolCaster implements CasterInterface
     {
         $res = filter_var($raw, FILTER_VALIDATE_BOOL, FILTER_NULL_ON_FAILURE);
         if ($res === null) {
-            throw new InvalidArgumentException("ENV {$key}: '{$raw}' is not a valid bool");
+            throw new CastException("ENV {$key}: '{$raw}' is not a valid bool");
         }
         return $res;
     }

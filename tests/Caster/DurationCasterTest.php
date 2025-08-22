@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Phithi92\TypedEnv\Tests\Caster;
 
 use DateInterval;
-use InvalidArgumentException;
+use Phithi92\TypedEnv\Exception\CastException;
 use PHPUnit\Framework\TestCase;
 use Phithi92\TypedEnv\Caster\DurationCaster;
 
@@ -66,7 +66,7 @@ final class DurationCasterTest extends TestCase
         $caster = new DurationCaster();
 
         // invalid format
-        $this->expectException(InvalidArgumentException::class);
+        $this->expectException(CastException::class);
         $caster->cast('KEY', 'not-a-duration');
     }
 
@@ -75,13 +75,13 @@ final class DurationCasterTest extends TestCase
         $caster = new DurationCaster();
 
         // invalid unit
-        $this->expectException(InvalidArgumentException::class);
+        $this->expectException(CastException::class);
         $caster->cast('KEY', '10w');
     }
 
     public function testInvalidRoundingMode(): void
     {
-        $this->expectException(InvalidArgumentException::class);
+        $this->expectException(CastException::class);
         new DurationCaster(false, 'invalid-mode');
     }
 }

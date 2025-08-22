@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Phithi92\TypedEnv\Caster;
 
-use InvalidArgumentException;
 use Phithi92\TypedEnv\Contracts\CasterInterface;
+use Phithi92\TypedEnv\Exception\CastException;
 
 final class VersionCaster implements CasterInterface
 {
@@ -21,7 +21,7 @@ final class VersionCaster implements CasterInterface
     public function cast(string $key, string $raw): string
     {
         if (preg_match(self::VERSION_PATTERN, $raw) !== 1) {
-            throw new InvalidArgumentException(
+            throw new CastException(
                 "Environment variable '{$key}' must be a valid semantic version (compliant with SemVer 2.0.0)."
             );
         }

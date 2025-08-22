@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Phithi92\TypedEnv\Caster;
 
-use InvalidArgumentException;
 use Phithi92\TypedEnv\Contracts\CasterInterface;
+use Phithi92\TypedEnv\Exception\CastException;
 
 final class PathCaster implements CasterInterface
 {
@@ -25,20 +25,20 @@ final class PathCaster implements CasterInterface
      *
      * @return string The validated path string
      *
-     * @throws InvalidArgumentException If the path is empty, or resolving fails
+     * @throws CastException If the path is empty, or resolving fails
      */
     public function cast(string $key, string $raw): string
     {
         $path = trim($raw);
 
         if ($path === '') {
-            throw new InvalidArgumentException("Environment variable '{$key}' must not be empty for PathCaster.");
+            throw new CastException("Environment variable '{$key}' must not be empty for PathCaster.");
         }
 
         if ($this->resolveRealpath) {
             $resolved = realpath($path);
             if ($resolved === false) {
-                throw new InvalidArgumentException(
+                throw new CastException(
                     "Environment variable '{$key}' points to a path that cannot be resolved: '{$path}'."
                 );
             }

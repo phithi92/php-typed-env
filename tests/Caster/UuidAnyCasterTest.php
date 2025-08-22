@@ -6,7 +6,7 @@ namespace Phithi92\TypedEnv\Tests\Caster;
 
 use PHPUnit\Framework\TestCase;
 use Phithi92\TypedEnv\KeyRule;
-use InvalidArgumentException;
+use Phithi92\TypedEnv\Exception\CastException;
 
 final class UuidAnyCasterTest extends TestCase
 {
@@ -22,7 +22,7 @@ final class UuidAnyCasterTest extends TestCase
     public function testInvalidUuid(): void
     {
         $r = (new KeyRule('ID'))->typeUuidAny();
-        $this->expectException(InvalidArgumentException::class);
+        $this->expectException(CastException::class);
         $r->apply('not-a-uuid');
     }
 }

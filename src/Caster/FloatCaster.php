@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Phithi92\TypedEnv\Caster;
 
-use InvalidArgumentException;
 use Phithi92\TypedEnv\Contracts\CasterInterface;
+use Phithi92\TypedEnv\Exception\CastException;
 
 final class FloatCaster implements CasterInterface
 {
@@ -13,7 +13,7 @@ final class FloatCaster implements CasterInterface
     {
         $s = trim($raw);
         if ($s === '' || ! is_numeric($s)) {
-            throw new InvalidArgumentException("ENV {$key}: '{$raw}' is not a valid float");
+            throw new CastException("ENV {$key}: '{$raw}' is not a valid float");
         }
         return (float) $s;
     }

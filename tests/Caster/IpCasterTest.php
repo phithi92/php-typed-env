@@ -6,7 +6,7 @@ namespace Phithi92\TypedEnv\Tests\Caster;
 
 use PHPUnit\Framework\TestCase;
 use Phithi92\TypedEnv\KeyRule;
-use InvalidArgumentException;
+use Phithi92\TypedEnv\Exception\CastException;
 
 final class IpCasterTest extends TestCase
 {
@@ -25,7 +25,7 @@ final class IpCasterTest extends TestCase
     public function testInvalidIp(): void
     {
         $r = (new KeyRule('IP'))->typeIp();
-        $this->expectException(InvalidArgumentException::class);
+        $this->expectException(CastException::class);
         $r->apply('999.999.999.999');
     }
 }

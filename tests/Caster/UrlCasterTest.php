@@ -6,7 +6,7 @@ namespace Phithi92\TypedEnv\Tests\Caster;
 
 use PHPUnit\Framework\TestCase;
 use Phithi92\TypedEnv\KeyRule;
-use InvalidArgumentException;
+use Phithi92\TypedEnv\Exception\CastException;
 
 final class UrlCasterTest extends TestCase
 {
@@ -19,7 +19,7 @@ final class UrlCasterTest extends TestCase
     public function testInvalidUrl(): void
     {
         $r = (new KeyRule('U'))->typeUrl();
-        $this->expectException(InvalidArgumentException::class);
+        $this->expectException(CastException::class);
         $r->apply('not-a-url');
     }
 }

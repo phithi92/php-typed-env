@@ -6,7 +6,7 @@ namespace Phithi92\TypedEnv\Tests\Constraint;
 
 use PHPUnit\Framework\TestCase;
 use Phithi92\TypedEnv\KeyRule;
-use InvalidArgumentException;
+use Phithi92\TypedEnv\Exception\ConstraintException;
 
 final class EnumConstraintTest extends TestCase
 {
@@ -19,7 +19,7 @@ final class EnumConstraintTest extends TestCase
     public function testInvalidEnum(): void
     {
         $r = (new KeyRule('C'))->typeString()->enum(['red','green','blue']);
-        $this->expectException(InvalidArgumentException::class);
+        $this->expectException(ConstraintException::class);
         $r->apply('yellow');
     }
 
@@ -28,7 +28,7 @@ final class EnumConstraintTest extends TestCase
         $r = (new KeyRule('C'))->typeInt()->enum([1,2,3]);
         self::assertSame(2, $r->apply('2'));
 
-        $this->expectException(InvalidArgumentException::class);
+        $this->expectException(ConstraintException::class);
         $r->apply('4');
     }
 }

@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Phithi92\TypedEnv\Caster;
 
 use DateInterval;
-use InvalidArgumentException;
 use Phithi92\TypedEnv\Contracts\CasterInterface;
+use Phithi92\TypedEnv\Exception\CastException;
 
 final class DurationCaster implements CasterInterface
 {
@@ -17,7 +17,7 @@ final class DurationCaster implements CasterInterface
     public function __construct(bool $returnInterval = false, string $roundingMode = 'floor')
     {
         if (! in_array($roundingMode, ['floor', 'ceil', 'round'], true)) {
-            throw new InvalidArgumentException("Invalid rounding mode: {$roundingMode}");
+            throw new CastException("Invalid rounding mode: {$roundingMode}");
         }
 
         $this->returnInterval = $returnInterval;
@@ -33,7 +33,7 @@ final class DurationCaster implements CasterInterface
         $trimmed = trim($raw);
 
         if (preg_match(self::DURATION_REGEX, $trimmed, $matches) !== 1) {
-            throw new InvalidArgumentException(
+            throw new CastException(
                 "ENV {$key}: '{$raw}' is not a valid duration (e.g., '1500ms', '30s', '5m')."
             );
         }
@@ -47,7 +47,7 @@ final class DurationCaster implements CasterInterface
             'm' => $number * 60,
             'h' => $number * 3600,
             'd' => $number * 86400,
-            default => throw new InvalidArgumentException(
+            default => throw new CastException(
                 "ENV {$key}: '{$unit}' is not a supported duration unit."
             ),
         };

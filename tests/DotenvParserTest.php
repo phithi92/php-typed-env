@@ -2,11 +2,11 @@
 
 namespace Phithi92\TypedEnv\Tests;
 
-use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
 use Phithi92\TypedEnv\DotenvParser;
 use Phithi92\TypedEnv\DotenvParserConfig;
-use RuntimeException;
+use Phithi92\TypedEnv\Exception\DotenvFileException;
+use Phithi92\TypedEnv\Exception\DotenvSyntaxException;
 
 final class DotenvParserTest extends TestCase
 {
@@ -106,7 +106,7 @@ final class DotenvParserTest extends TestCase
     {
         $path = $this->writeTemp("INVALID_LINE\nFOO=bar\n");
 
-        $this->expectException(InvalidArgumentException::class);
+        $this->expectException(DotenvSyntaxException::class);
         (new DotenvParser())->parse($path);
     }
 
@@ -114,13 +114,13 @@ final class DotenvParserTest extends TestCase
     {
         $path = $this->writeTemp("=value\n");
 
-        $this->expectException(InvalidArgumentException::class);
+        $this->expectException(DotenvSyntaxException::class);
         (new DotenvParser())->parse($path);
     }
 
     public function testThrowsIfFileNotFound(): void
     {
-        $this->expectException(RuntimeException::class);
+        $this->expectException(DotenvFileException::class);
         (new DotenvParser())->parse(__DIR__ . '/not_exists.env');
     }
 }

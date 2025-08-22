@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Phithi92\TypedEnv\Caster;
 
-use InvalidArgumentException;
 use Phithi92\TypedEnv\Contracts\CasterInterface;
+use Phithi92\TypedEnv\Exception\CastException;
 
 /**
  * Converts a delimited string into an array of strings.
@@ -21,7 +21,7 @@ final class ArrayCaster implements CasterInterface
     public function __construct(string $delimiter = ',')
     {
         if ($delimiter === '') {
-            throw new InvalidArgumentException('Delimiter for ArrayCaster cannot be empty.');
+            throw new CastException('Delimiter for ArrayCaster cannot be empty.');
         }
         $this->delimiter = $delimiter;
     }
@@ -47,7 +47,7 @@ final class ArrayCaster implements CasterInterface
     /**
      * @return array<int, string>
      *
-     * @throws InvalidArgumentException
+     * @throws CastException
      */
     private function filteredValues(string $key, string $value): array
     {
@@ -55,7 +55,7 @@ final class ArrayCaster implements CasterInterface
 
         $filtered = array_filter($parts, static fn ($v) => $v !== '');
         if (count($filtered) === 0) {
-            throw new InvalidArgumentException("ENV {$key}: cannot cast '{$value}' to array (empty values only).");
+            throw new CastException("ENV {$key}: cannot cast '{$value}' to array (empty values only).");
         }
 
         return $filtered;

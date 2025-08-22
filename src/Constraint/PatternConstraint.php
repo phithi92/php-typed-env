@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Phithi92\TypedEnv\Constraint;
 
-use InvalidArgumentException;
 use Phithi92\TypedEnv\Caster\RegexUtil;
 use Phithi92\TypedEnv\Contracts\ConstraintInterface;
+use Phithi92\TypedEnv\Exception\ConstraintException;
 
 final class PatternConstraint implements ConstraintInterface
 {
@@ -18,7 +18,7 @@ final class PatternConstraint implements ConstraintInterface
     {
         $s = is_scalar($value) ? (string) $value : '';
         if (preg_match($this->regex, $s) !== 1) {
-            throw new InvalidArgumentException("ENV {$key}: '{$s}' does not match pattern {$this->regex}");
+            throw new ConstraintException("ENV {$key}: '{$s}' does not match pattern {$this->regex}");
         }
         return $value;
     }

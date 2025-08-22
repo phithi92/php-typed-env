@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Phithi92\TypedEnv\Caster;
 
-use InvalidArgumentException;
 use Phithi92\TypedEnv\Contracts\CasterInterface;
+use Phithi92\TypedEnv\Exception\CastException;
 
 final class ChmodCaster implements CasterInterface
 {
@@ -18,7 +18,7 @@ final class ChmodCaster implements CasterInterface
      *
      * @return int         Integer representing the octal permission mask.
      *
-     * @throws InvalidArgumentException if the value is invalid.
+     * @throws CastException if the value is invalid.
      */
     public function cast(string $key, string $raw): int
     {
@@ -26,7 +26,7 @@ final class ChmodCaster implements CasterInterface
 
         // Must be 3 or 4 octal digits
         if (preg_match(self::CHMOD_REGEX, $trimmed) !== 1) {
-            throw new InvalidArgumentException("Env {$key}: invalid chmod value '{$raw}'");
+            throw new CastException("Env {$key}: invalid chmod value '{$raw}'");
         }
 
         // Interpret as octal

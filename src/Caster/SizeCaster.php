@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Phithi92\TypedEnv\Caster;
 
-use InvalidArgumentException;
 use Phithi92\TypedEnv\Contracts\CasterInterface;
+use Phithi92\TypedEnv\Exception\CastException;
 
 final class SizeCaster implements CasterInterface
 {
@@ -36,19 +36,19 @@ final class SizeCaster implements CasterInterface
             'mb' => 1024 ** 2,
             'gb' => 1024 ** 3,
             'tb' => 1024 ** 4,
-            default => throw new InvalidArgumentException("ENV {$key}: unsupported size unit '{$unit}'"),
+            default => throw new CastException("ENV {$key}: unsupported size unit '{$unit}'"),
         };
     }
 
     /**
      * @return array{int,string}
      *
-     * @throws InvalidArgumentException
+     * @throws CastException
      */
     private function parseSize(string $value, string $key, string $raw): array
     {
         if (preg_match(self::SIZE_REGEX, $value, $m) !== 1) {
-            throw new InvalidArgumentException("ENV {$key}: '{$raw}' is not a valid size");
+            throw new CastException("ENV {$key}: '{$raw}' is not a valid size");
         }
 
         return [(int) $m[1],strtolower($m[2])];
@@ -58,7 +58,7 @@ final class SizeCaster implements CasterInterface
     {
         $value = trim($raw);
         if ($value === '') {
-            throw new InvalidArgumentException("ENV {$key}: size is empty");
+            throw new CastException("ENV {$key}: size is empty");
         }
 
         return $value;
@@ -67,7 +67,7 @@ final class SizeCaster implements CasterInterface
     private function overflowProtect(string $key, int $num, int $mult): void
     {
         if ($num > intdiv(PHP_INT_MAX, $mult)) {
-            throw new InvalidArgumentException("ENV {$key}: size overflows integer range");
+            throw new CastException("ENV {$key}: size overflows integer range");
         }
     }
 }

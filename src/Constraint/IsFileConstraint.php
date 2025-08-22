@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Phithi92\TypedEnv\Constraint;
 
-use InvalidArgumentException;
+use Phithi92\TypedEnv\Exception\ConstraintException;
 
 final class IsFileConstraint extends AbstractPathConstraint
 {
@@ -12,7 +12,7 @@ final class IsFileConstraint extends AbstractPathConstraint
     {
         $p = self::path($value);
         if (! is_file($p)) {
-            throw new InvalidArgumentException("path '{$p}' is not a file");
+            throw new ConstraintException("path '{$p}' is not a file");
         }
         return $p;
     }

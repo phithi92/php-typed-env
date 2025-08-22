@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Phithi92\TypedEnv\Constraint;
 
-use InvalidArgumentException;
+use Phithi92\TypedEnv\Exception\ConstraintException;
 
 final class IsWritableConstraint extends AbstractPathConstraint
 {
@@ -12,7 +12,7 @@ final class IsWritableConstraint extends AbstractPathConstraint
     {
         $p = self::path($value);
         if (! is_writable($p)) {
-            throw new InvalidArgumentException("path '{$p}' is not writable");
+            throw new ConstraintException("path '{$p}' is not writable");
         }
         return $p;
     }

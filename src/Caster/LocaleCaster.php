@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Phithi92\TypedEnv\Caster;
 
-use InvalidArgumentException;
 use Phithi92\TypedEnv\Contracts\CasterInterface;
+use Phithi92\TypedEnv\Exception\CastException;
 
 final class LocaleCaster implements CasterInterface
 {
@@ -14,7 +14,7 @@ final class LocaleCaster implements CasterInterface
     public function cast(string $key, string $raw): string
     {
         if (preg_match(self::LOCALE_REGEX, $raw) !== 1) {
-            throw new InvalidArgumentException(
+            throw new CastException(
                 "Environment variable '{$key}' must be a valid locale (e.g., en_US, de_DE)."
             );
         }

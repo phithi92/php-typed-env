@@ -6,7 +6,7 @@ namespace Phithi92\TypedEnv\Tests\Caster;
 
 use PHPUnit\Framework\TestCase;
 use Phithi92\TypedEnv\KeyRule;
-use JsonException;
+use Phithi92\TypedEnv\Exception\CastException;
 use stdClass;
 
 final class JsonCasterTest extends TestCase
@@ -28,7 +28,7 @@ final class JsonCasterTest extends TestCase
     public function testInvalidJson(): void
     {
         $r = (new KeyRule('J'))->typeJson();
-        $this->expectException(JsonException::class);
+        $this->expectException(CastException::class);
         $r->apply('{');
     }
 }

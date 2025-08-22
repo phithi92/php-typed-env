@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Phithi92\TypedEnv;
 
-use InvalidArgumentException;
+use Phithi92\TypedEnv\Exception\DotenvFileException;
+use Phithi92\TypedEnv\Exception\DotenvSyntaxException;
 use RuntimeException;
 use SplFileObject;
 
@@ -20,7 +21,7 @@ final class DotenvParser
     /**
      * @return array<string,string>
      *
-     * @throws RuntimeException|InvalidArgumentException
+     * @throws DotenvSyntaxException|DotenvFileException
      */
     public function parse(string $path): array
     {
@@ -53,13 +54,13 @@ final class DotenvParser
     private function openHandle(string $path): SplFileObject
     {
         if (! is_file($path)) {
-            throw new RuntimeException("Dotenv file not found: {$path}");
+            throw new DotenvFileException("Dotenv file not found: {$path}");
         }
 
         try {
             return new SplFileObject($path, 'rb');
         } catch (RuntimeException $e) {
-            throw new RuntimeException("Unable to open dotenv file: {$path}", 0, $e);
+            throw new DotenvFileException("Unable to open dotenv file: {$path}", 0, $e);
         }
     }
 
@@ -95,14 +96,14 @@ final class DotenvParser
     {
         $parts = explode('=', $line, 2);
         if (count($parts) < 2) {
-            throw new InvalidArgumentException("Invalid .env line {$lineNo}: missing '='");
+            throw new DotenvSyntaxException("Invalid .env line {$lineNo}: missing '='");
         }
 
         $key = trim($parts[0]);
         $val = trim($parts[1]);
 
         if ($key === '') {
-            throw new InvalidArgumentException("Invalid .env line {$lineNo}: empty key");
+            throw new DotenvSyntaxException("Invalid .env line {$lineNo}: empty key");
         }
 
         return [$key, $val];

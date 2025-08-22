@@ -2,25 +2,61 @@
 
 declare(strict_types=1);
 
-namespace Phithi92\TypedEnv\Tests;
+namespace Phithi92\TypedEnv\Tests\Caster;
 
 use PHPUnit\Framework\TestCase;
-use Phithi92\TypedEnv\KeyRule;
+use Phithi92\TypedEnv\Caster\ListCaster;
+use Phithi92\TypedEnv\Exception\CastException;
 
 final class ListCasterTest extends TestCase
 {
-    public function testListTrimAndEmpty(): void
+    public function testThrowsExceptionWhenDelimiterIsEmpty(): void
     {
-        $r = (new KeyRule('L'))->typeList(',', false);
-        self::assertSame(['a','b','c'], $r->apply(' a, b , , c '));
+        $this->expectException(CastException::class);
+        $this->expectExceptionMessage('Delimiter must not be empty');
 
-        $r2 = (new KeyRule('L'))->typeList(',', true);
-        self::assertSame(['a','b','','c'], $r2->apply(' a, b , , c '));
+        new ListCaster('');
     }
 
-    public function testCustomDelimiter(): void
+    public function testConstructorAcceptsValidDelimiter(): void
     {
-        $r = (new KeyRule('L'))->typeList(';');
-        self::assertSame(['a','b','c'], $r->apply('a; b ;c'));
+        $caster = new ListCaster(';');
+        $result = $caster->cast('KEY', 'a;b;c');
+
+        $this->assertSame(['a', 'b', 'c'], $result);
+    }
+
+    public function testDefaultAllowEmptyIsFalse(): void
+    {
+        $caster = new ListCaster(',');
+        $result = $caster->cast('KEY', 'a,,b');
+
+        // empty values removed
+        $this->assertSame(['a', 'b'], $result);
+    }
+
+    public function testAllowEmptyTrueKeepsEmptyStrings(): void
+    {
+        $caster = new ListCaster(',', true);
+        $result = $caster->cast('KEY', 'a,,b');
+
+        // empty values preserved
+        $this->assertSame(['a', '', 'b'], $result);
+    }
+
+    public function testTrimsWhitespaceFromValues(): void
+    {
+        $caster = new ListCaster();
+        $result = $caster->cast('KEY', '  x ,  y  , z ');
+
+        $this->assertSame(['x', 'y', 'z'], $result);
+    }
+
+    public function testCustomDelimiterAndAllowEmpty(): void
+    {
+        $caster = new ListCaster('|', true);
+        $result = $caster->cast('KEY', 'a||b| |c');
+
+        $this->assertSame(['a', '', 'b', '', 'c'], $result);
     }
 }

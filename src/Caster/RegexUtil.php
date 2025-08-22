@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Phithi92\TypedEnv\Caster;
 
-use InvalidArgumentException;
+use Phithi92\TypedEnv\Exception\CastException;
 
 final class RegexUtil
 {
@@ -13,7 +13,7 @@ final class RegexUtil
     {
         set_error_handler(
             static function (int $severity, string $message) use ($pattern): bool {
-                throw new InvalidArgumentException("Invalid regex '{$pattern}': {$message}");
+                throw new CastException("Invalid regex '{$pattern}': {$message}");
             },
             E_WARNING
         );
@@ -22,7 +22,7 @@ final class RegexUtil
             if (function_exists('preg_last_error_msg')) {
                 $err = preg_last_error();
                 if ($err !== PREG_NO_ERROR) {
-                    throw new InvalidArgumentException("Invalid regex '{$pattern}': " . preg_last_error_msg());
+                    throw new CastException("Invalid regex '{$pattern}': " . preg_last_error_msg());
                 }
             }
         } finally {
