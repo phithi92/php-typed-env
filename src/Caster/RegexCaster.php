@@ -11,9 +11,7 @@ final class RegexCaster implements CasterInterface
 {
     public function __construct(private string $pattern)
     {
-        if (@preg_match($pattern, '') !== 1) {
-            throw new CastException("Invalid regex pattern: '{$pattern}'.");
-        }
+        RegexUtil::assertValid($pattern);
     }
 
     public function cast(string $key, string $raw): string
