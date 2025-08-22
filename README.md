@@ -30,7 +30,8 @@ use Phithi92\TypedEnv\Schema;
 
 $schema = Schema::build()
     ->string('APP_NAME')
-    ->int('APP_PORT')->min(1024)->max(65535)
+    ->port('APP_PORT')
+    ->string('APP_MODE')->enum(['development','production'])
     ->bool('APP_DEBUG')
     ->duration('CACHE_TTL')
     ->json('FEATURE_FLAGS')
@@ -41,6 +42,74 @@ $env = EnvKit::load(__DIR__.'/.env', $schema);
 echo $env['APP_NAME'];  // string
 echo $env['APP_PORT'];  // int
 var_dump($env['FEATURE_FLAGS']); // array
+```
+
+## Casting & Constraints
+
+Casters convert raw `.env` values into PHP types, while constraints validate those values. Use casters on their own or chain constraints for additional validation.
+
+```php
+use Phithi92\TypedEnv\EnvKit;
+use Phithi92\TypedEnv\Schema;
+
+$schema = Schema::build()
+    // Cast only: converts to bool without extra validation
+    ->bool('APP_DEBUG')
+
+    // Cast with constraints: integer between 1024 and 65535
+    ->int('APP_PORT')->min(1024)->max(65535)
+
+    // Another constraint example: restrict values to a set
+    ->string('APP_ENV')->enum('dev', 'prod');
+
+$env = EnvKit::load(__DIR__.'/.env', $schema);
+```
+
+---
+
+## Exception Handling
+
+`EnvKit::load()` **reads** the `.env` file and builds the environment values.  
+It can throw only:
+
+- `DotenvFileException` – the `.env` file is missing or unreadable.
+
+**Syntax checking, casting, and constraint validation happen only when you call `$env->validate()`**, which can throw:
+
+- `DotenvSyntaxException` – syntax errors in the `.env` file
+- `MissingEnvVariableException` – a required variable is missing
+- `CastException` – a value cannot be cast to the expected type
+- `ConstraintException` – a value violates a validation rule
+
+### Example
+
+```php
+use Phithi92\TypedEnv\EnvKit;
+use Phithi92\TypedEnv\Schema;
+use Phithi92\TypedEnv\Exception\{
+    DotenvFileException,
+    DotenvSyntaxException,
+    MissingEnvVariableException,
+    CastException,
+    ConstraintException
+};
+
+$schema = Schema::build()->port('APP_PORT');
+
+try {
+    // Step 1: Load the .env file
+    $env = EnvKit::load(__DIR__ . '/.env', $schema);
+} catch (DotenvFileException $e) {
+    // Handle file reading errors (missing/unreadable .env)
+    // e.g., log the error or show a user-friendly message
+}
+
+try {
+    // Step 2: Validate types, constraints, and syntax
+    $env->validate();
+} catch (MissingEnvVariableException | CastException | ConstraintException | DotenvSyntaxException $e) {
+    // Handle validation, casting, or syntax issues
+}
 ```
 
 ---
