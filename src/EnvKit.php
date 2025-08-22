@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Phithi92\TypedEnv;
 
+use Phithi92\TypedEnv\Exception\DotenvFileException;
 use Phithi92\TypedEnv\Exception\MissingEnvVariableException;
 
 final class EnvKit
@@ -18,10 +19,15 @@ final class EnvKit
         $this->parser = $parser ?? new DotenvParser();
     }
 
+    public static function load(string $path): self
+    {
+        return (new EnvKit())->loadDotenv($path);
+    }
+
     public function loadDotenv(string $path): self
     {
         if (! file_exists($path)) {
-            return $this;
+            throw new DotenvFileException('No file found');
         }
 
         /** @var array<string,string> $parsed */
