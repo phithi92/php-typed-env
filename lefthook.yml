@@ -1,0 +1,34 @@
+pre-commit:
+  parallel: false
+  skip:
+    - merge
+    - rebase
+  commands:
+    fix-code-style:
+      glob: "*.php"
+      run: php vendor/bin/phpinsights --no-interaction --quiet fix src || true
+      stage_fixed: true
+      
+    fix-code-psr12:
+      glob: "*.php"
+      run: php vendor/bin/phpcbf --standard=PSR12 -q {staged_files}; exit 0
+      stage_fixed: true
+
+    lint-code:
+      glob: "*.php"
+      run: php vendor/bin/parallel-lint {staged_files}
+  
+    lint-code-psr12:
+      glob: "*.php"
+      run: php vendor/bin/phpcs --standard=PSR12 {staged_files}
+
+pre-push:
+  parallel: true
+  commands:
+    analyse-code:
+      glob: "*.{php,neon}"
+      run: php vendor/bin/phpstan analyse --configuration=config/phpstan.neon --memory-limit=1G
+
+    test-code:
+      glob: "*.{php,xml,neon}"
+      run: XDEBUG_MODE=off php vendor/bin/phpunit --configuration config/phpunit.xml --colors=always
