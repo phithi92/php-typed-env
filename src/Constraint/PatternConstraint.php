@@ -4,16 +4,22 @@ declare(strict_types=1);
 
 namespace Phithi92\TypedEnv\Constraint;
 
-use Phithi92\TypedEnv\Caster\RegexUtil;
 use Phithi92\TypedEnv\Contracts\ConstraintInterface;
 use Phithi92\TypedEnv\Exception\ConstraintException;
 
 final class PatternConstraint implements ConstraintInterface
 {
-    public function __construct(private string $regex)
+    private string $regex;
+
+    public function __construct(string $pattern)
     {
-        RegexUtil::assertValid($regex);
+        if (@preg_match($pattern, '') === false) {
+            throw new ConstraintException('No valid pattern.');
+        }
+
+        $this->regex = $pattern;
     }
+
     public function assert(string $key, mixed $value): mixed
     {
         $s = is_scalar($value) ? (string) $value : '';

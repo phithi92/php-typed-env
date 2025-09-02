@@ -10,7 +10,7 @@ use Phithi92\TypedEnv\Exception\CastException;
 
 final class JsonCaster implements CasterInterface
 {
-    public function __construct(private bool $assoc = true)
+    public function __construct(private bool $assoc)
     {
     }
     public function cast(string $key, string $raw): mixed

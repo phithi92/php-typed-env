@@ -18,7 +18,7 @@ final class ArrayCaster implements CasterInterface
 {
     private readonly string $delimiter;
 
-    public function __construct(string $delimiter = ',')
+    public function __construct(string $delimiter)
     {
         if ($delimiter === '') {
             throw new CastException('Delimiter for ArrayCaster cannot be empty.');

@@ -14,7 +14,7 @@ final class DurationCaster implements CasterInterface
     private bool $returnInterval;
     private string $roundingMode;
 
-    public function __construct(bool $returnInterval = false, string $roundingMode = 'floor')
+    public function __construct(bool $returnInterval, string $roundingMode)
     {
         if (! in_array($roundingMode, ['floor', 'ceil', 'round'], true)) {
             throw new CastException("Invalid rounding mode: {$roundingMode}");

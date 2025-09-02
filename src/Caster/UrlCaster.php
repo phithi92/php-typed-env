@@ -14,6 +14,7 @@ final class UrlCaster implements CasterInterface
         if (filter_var($raw, FILTER_VALIDATE_URL) === false) {
             throw new CastException("ENV {$key}: '{$raw}' is not a valid URL");
         }
+
         return $raw;
     }
 }

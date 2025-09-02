@@ -13,7 +13,7 @@ final class PathCaster implements CasterInterface
      * @param bool $resolveRealpath Resolve to absolute canonical path using realpath()
      */
     public function __construct(
-        private bool $resolveRealpath = false
+        private bool $resolveRealpath
     ) {
     }
 

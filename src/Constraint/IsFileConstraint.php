@@ -8,7 +8,7 @@ use Phithi92\TypedEnv\Exception\ConstraintException;
 
 final class IsFileConstraint extends AbstractPathConstraint
 {
-    public function assert(string $key, mixed $value): mixed
+    public function assert(string $key, mixed $value): string
     {
         $p = self::path($value);
         if (! is_file($p)) {
