@@ -5,21 +5,24 @@ declare(strict_types=1);
 namespace Phithi92\TypedEnv\Tests\Constraint;
 
 use PHPUnit\Framework\TestCase;
-use Phithi92\TypedEnv\KeyRule;
 use Phithi92\TypedEnv\Exception\ConstraintException;
+use Phithi92\TypedEnv\Constraint\MaxConstraint;
 
 final class MaxConstraintTest extends TestCase
 {
     public function testPassesWhenBelowMax(): void
     {
-        $r = (new KeyRule('N'))->typeInt()->max(100);
-        self::assertSame(42, $r->apply('42'));
+        $r = new MaxConstraint(10);
+
+        $this->assertSame(9, $r->assert('C', 9));
     }
 
     public function testFailsWhenAboveMax(): void
     {
-        $r = (new KeyRule('N'))->typeInt()->max(10);
+        $r = new MaxConstraint(10);
+
         $this->expectException(ConstraintException::class);
-        $r->apply('20');
+
+        $this->assertSame(11, $r->assert('C', 11));
     }
 }
