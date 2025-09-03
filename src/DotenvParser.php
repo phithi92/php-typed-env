@@ -4,18 +4,20 @@ declare(strict_types=1);
 
 namespace Phithi92\TypedEnv;
 
+use Phithi92\TypedEnv\Contracts\HandlerInterface;
 use Phithi92\TypedEnv\Exception\DotenvFileException;
 use Phithi92\TypedEnv\Exception\DotenvSyntaxException;
-use RuntimeException;
-use SplFileObject;
 
 final class DotenvParser
 {
     private readonly DotenvParserConfig $config;
 
-    public function __construct(?DotenvParserConfig $config = null)
+    private readonly HandlerInterface $handler;
+
+    public function __construct(HandlerInterface $handler, ?DotenvParserConfig $config = null)
     {
         $this->config = $config ?? new DotenvParserConfig();
+        $this->handler = $handler;
     }
 
     /**
@@ -23,27 +25,22 @@ final class DotenvParser
      *
      * @throws DotenvSyntaxException|DotenvFileException
      */
-    public function parse(string $path): array
+    public function parse(): array
     {
         $result = [];
-        $lineNo = 0;
 
-        $h = $this->openHandle($path);
-        while (! $h->eof()) {
-            $line = $h->fgets();
-            $lineNo++;
-            $trimmedLine = rtrim($line, "\r\n");
+        while ($this->handler->hasMore()) {
+            $line = $this->handler->read() ?? '';
+            $lineNo = $this->handler->current();
 
-            $processedLine = $this->preprocessLine($trimmedLine, $lineNo);
-            if ($this->isSkippable($processedLine)) {
+            $processedLine = $this->normalizeLine($line, $lineNo);
+            if ($processedLine === false) {
                 continue;
             }
 
-            [$key, $val] = $this->splitKeyValue($processedLine, $lineNo);
+            [$key, $value] = $this->splitKeyValue($processedLine, $lineNo);
 
-            $result[$key] = $this->normalizeValue($val);
-
-            $h->next();
+            $result[$key] = $this->normalizeValue($value);
         }
 
         return $result;
@@ -51,24 +48,17 @@ final class DotenvParser
 
     // ---------- Helpers ---------------------------------------------------
 
-    private function openHandle(string $path): SplFileObject
+    private function normalizeLine(string $line, int $lineNo): string|false
     {
-        if (! is_file($path)) {
-            throw new DotenvFileException("Dotenv file not found: {$path}");
-        }
+        $line = rtrim($line, "\r\n");
 
-        try {
-            return new SplFileObject($path, 'rb');
-        } catch (RuntimeException $e) {
-            throw new DotenvFileException("Unable to open dotenv file: {$path}", 0, $e);
-        }
-    }
-
-    private function preprocessLine(string $line, int $lineNo): string
-    {
         // strip UTF-8 BOM on first line if present
         if ($lineNo === 1 && str_starts_with($line, "\xEF\xBB\xBF")) {
             $line = substr($line, 3);
+        }
+
+        if ($this->isSkippable($line)) {
+            return false;
         }
 
         // support optional "export " prefix
@@ -77,10 +67,18 @@ final class DotenvParser
             if (str_starts_with($ltrim, 'export ')) {
                 // remove only the first occurrence at line start
                 $line = preg_replace('/^\s*export\s+/', '', $line, 1);
+                if ($line === null) {
+                    throw new DotenvSyntaxException(
+                        sprintf(
+                            "Regex error while trying to strip 'export' prefix from line: '%s'",
+                            $ltrim
+                        )
+                    );
+                }
             }
         }
 
-        return $line ?? '';
+        return $line;
     }
 
     private function isSkippable(string $line): bool
