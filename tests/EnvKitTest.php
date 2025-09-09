@@ -4,8 +4,10 @@ namespace Phithi92\TypedEnv\Tests;
 
 use PHPUnit\Framework\TestCase;
 use Phithi92\TypedEnv\EnvKit;
-use Phithi92\TypedEnv\Schema;
+use Phithi92\TypedEnv\Schema\Schema;
+use Phithi92\TypedEnv\Handler\FileHandler;
 use Phithi92\TypedEnv\Exception\MissingEnvVariableException;
+use Phithi92\TypedEnv\DotenvParser;
 
 final class EnvKitTest extends TestCase
 {
@@ -31,22 +33,25 @@ final class EnvKitTest extends TestCase
 
     public function testLoadAndValidate(): void
     {
-        $path = $this->writeEnv(<<<'ENV'
-APP_ENV=dev
-DEBUG=1
-PORT=5432
-TIMEOUT=2m
-ENV);
+        $content = <<<ENV
+        APP_ENV=dev
+        DEBUG=1
+        PORT=5432
+        TIMEOUT=2m
+        ENV;
+
+        $path = $this->writeEnv($content);
 
         // IMPORTANT: keep the Schema instance; call typed methods on it separately
         $schema = Schema::build();
         $schema->string('APP_ENV');
         $schema->bool('DEBUG');
-        $schema->int('PORT', 1, 65535);
+        $schema->port('PORT');
         $schema->duration('TIMEOUT');
 
-        $cfg = (new EnvKit())
-            ->loadDotenv($path)
+        $parser = new DotenvParser(new FileHandler($path));
+
+        $cfg = (new EnvKit($parser))
             ->validate($schema);
 
         $this->assertSame('dev', $cfg->get('APP_ENV'));
@@ -64,20 +69,19 @@ ENV);
         $schema->string('MISSING'); // required by default
 
         $this->expectException(MissingEnvVariableException::class);
-        (new EnvKit())->loadDotenv($path)->validate($schema);
+        (new EnvKit(new DotenvParser(new FileHandler($path))))->validate($schema);
     }
 
     public function testFallsBackToEnvSuperglobal(): void
     {
         $path = $this->writeEnv("APP_ENV=prod\n");
-        $_ENV['FALLBACK'] = '42';
+        $_ENV['FALLBACK'] = 42;
 
         $schema = Schema::build();
         $schema->string('APP_ENV');
         $schema->int('FALLBACK');
 
-        $cfg = (new EnvKit())
-            ->loadDotenv($path)
+        $cfg = (new EnvKit(new DotenvParser(new FileHandler($path))))
             ->validate($schema);
 
         $this->assertSame('prod', $cfg->get('APP_ENV'));

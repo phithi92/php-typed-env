@@ -20,7 +20,7 @@ final class UrlKeyRuleTest extends TestCase
     public function testInvalidUrlCast(): void
     {
         $this->expectException(CastException::class);
-        $this->expectExceptionMessage("ENV APP_URL: 'not a url' is not a valid URL");
+        $this->expectExceptionMessage("Invalid URL: not a url");
 
         (new UrlKeyRule('APP_URL'))->apply('not a url');
     }

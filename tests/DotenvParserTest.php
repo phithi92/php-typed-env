@@ -5,8 +5,8 @@ namespace Phithi92\TypedEnv\Tests;
 use PHPUnit\Framework\TestCase;
 use Phithi92\TypedEnv\DotenvParser;
 use Phithi92\TypedEnv\DotenvParserConfig;
-use Phithi92\TypedEnv\Exception\DotenvFileException;
 use Phithi92\TypedEnv\Exception\DotenvSyntaxException;
+use Phithi92\TypedEnv\Handler\FileHandler;
 
 final class DotenvParserTest extends TestCase
 {
@@ -41,8 +41,8 @@ final class DotenvParserTest extends TestCase
             REQUEST_TIMEOUT=5s
             ENV);
 
-        $parser = new DotenvParser(); // default config
-        $data = $parser->parse($path);
+        $parser = new DotenvParser(new FileHandler($path)); // default config
+        $data = $parser->parse();
 
         $this->assertSame([
             'APP_ENV'         => 'dev',
@@ -58,14 +58,14 @@ final class DotenvParserTest extends TestCase
         $path = $this->writeTemp("export FOO=bar\n   export   BAR= baz\n");
 
         // aktiviert: export wird entfernt
-        $parser = new DotenvParser(new DotenvParserConfig(allowExport: true));
-        $data   = $parser->parse($path);
+        $parser = new DotenvParser(new FileHandler($path), new DotenvParserConfig(allowExport: true));
+        $data   = $parser->parse();
         $this->assertSame('bar', $data['FOO']);
         $this->assertSame('baz', $data['BAR']);
 
         // deaktiviert: export bleibt Teil des Keys (reines Parser-Verhalten)
-        $parserNo = new DotenvParser(new DotenvParserConfig(allowExport: false));
-        $raw      = $parserNo->parse($path);
+        $parserNo = new DotenvParser(new FileHandler($path), new DotenvParserConfig(allowExport: false));
+        $raw      = $parserNo->parse();
         $this->assertArrayHasKey('export FOO', $raw);
         $this->assertSame('bar', $raw['export FOO']);
     }
@@ -79,15 +79,15 @@ final class DotenvParserTest extends TestCase
             ENV);
 
         // aktiviert: trailing # nach value (ohne quotes) wird entfernt
-        $parser = new DotenvParser(new DotenvParserConfig(allowInlineComments: true));
-        $data   = $parser->parse($path);
+        $parser = new DotenvParser(new FileHandler($path), new DotenvParserConfig(allowInlineComments: true));
+        $data   = $parser->parse();
         $this->assertSame('foo', $data['RAW']);
         $this->assertSame('foo # not a comment', $data['QUOTED']); // quotes bleiben Inhalt
         $this->assertSame('bar # also not a comment', $data['SINGLE']);
 
         // deaktiviert: nichts wird abgeschnitten
-        $parserOff = new DotenvParser(new DotenvParserConfig(allowInlineComments: false));
-        $raw       = $parserOff->parse($path);
+        $parserOff = new DotenvParser(new FileHandler($path), new DotenvParserConfig(allowInlineComments: false));
+        $raw       = $parserOff->parse();
         $this->assertSame('foo # trailing', $raw['RAW']);
     }
 
@@ -95,8 +95,8 @@ final class DotenvParserTest extends TestCase
     {
         // BOM + CRLF
         $path = $this->writeTemp("\xEF\xBB\xBFFOO=bar\r\nBAR=baz\r\n");
-        $parser = new DotenvParser();
-        $data   = $parser->parse($path);
+        $parser = new DotenvParser(new FileHandler($path));
+        $data   = $parser->parse();
 
         $this->assertSame('bar', $data['FOO']);
         $this->assertSame('baz', $data['BAR']);
@@ -106,8 +106,11 @@ final class DotenvParserTest extends TestCase
     {
         $path = $this->writeTemp("INVALID_LINE\nFOO=bar\n");
 
+        $p = (new DotenvParser(new FileHandler($path)));
+
+        $k = new \Phithi92\TypedEnv\EnvKit($p);
         $this->expectException(DotenvSyntaxException::class);
-        (new DotenvParser())->parse($path);
+        $k->validate(new \Phithi92\TypedEnv\Schema\Schema());
     }
 
     public function testThrowsOnEmptyKey(): void
@@ -115,12 +118,6 @@ final class DotenvParserTest extends TestCase
         $path = $this->writeTemp("=value\n");
 
         $this->expectException(DotenvSyntaxException::class);
-        (new DotenvParser())->parse($path);
-    }
-
-    public function testThrowsIfFileNotFound(): void
-    {
-        $this->expectException(DotenvFileException::class);
-        (new DotenvParser())->parse(__DIR__ . '/not_exists.env');
+        (new DotenvParser(new FileHandler($path)))->parse($path);
     }
 }

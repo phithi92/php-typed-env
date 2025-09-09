@@ -18,37 +18,50 @@ final class SchemaTest extends TestCase
         $this->assertInstanceOf(Schema::class, $schema);
     }
 
-    public function testListKeyRule(): void
+    public function testListWithToManyItems(): void
     {
         $e = new EnvKit(new DotenvParser(new MemoryHandler([
-            'LIST=cheese,love,cake',
+            'LIST=cheese,love,cake'
         ])));
 
         // ---- Test with to many items -------------------------------------
         $schema = Schema::build();
         $schema->list('LIST')
-            ->maxItems(3)
-            ->minItems(1)
-            ->allowedValues(['cheese','love','cake']);
-        $this->expectException(ConstraintException::class);
-        $e->validate($schema);
-
-        // ---- Test with to few items --------------------------------------
-        $schema->list('LIST')
             ->maxItems(2)
-            ->minItems(1)
-            ->allowedValues(['cheese','love','cake']);
-        $this->expectException(ConstraintException::class);
-        $e->validate($schema);
-
-
-        // ---- Test with to few items --------------------------------------
-        $schema->list('LIST')
-            ->assertValuesNotEmpty()
-            ->allowedValues(['cheese','love','']);
+            ->minItems(1);
         $this->expectException(ConstraintException::class);
         $e->validate($schema);
     }
+
+    public function testListWithToFewItems(): void
+    {
+        $e = new EnvKit(new DotenvParser(new MemoryHandler([
+            'LIST=cheese'
+        ])));
+
+        // ---- Test with to many items -------------------------------------
+        $schema = Schema::build();
+        $schema->list('LIST')
+            ->maxItems(2)
+            ->minItems(2);
+        $this->expectException(ConstraintException::class);
+        $e->validate($schema);
+    }
+
+    public function testListWithEmptyItem(): void
+    {
+        $e = new EnvKit(new DotenvParser(new MemoryHandler([
+            'LIST=cheese,,'
+        ])));
+
+        // ---- Test with to many items -------------------------------------
+        $schema = Schema::build();
+        $schema->list('LIST')
+            ->assertValuesNotEmpty();
+        $this->expectException(ConstraintException::class);
+        $e->validate($schema);
+    }
+
 
     public function testTypedEntryPointsReturnKeyRuleAndStoreIt(): void
     {
