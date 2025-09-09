@@ -19,9 +19,14 @@ use Phithi92\TypedEnv\Schema\KeyRule;
  */
 final class UrlKeyRule extends KeyRule
 {
-    public function __construct(string $key)
+    private const DEFAULT_PROTOCOLS = ['http','https'];
+
+    /**
+     * @param array<string> $protocols  allowed protocols (like ['http','https'])
+     */
+    public function __construct(string $key, array $protocols = self::DEFAULT_PROTOCOLS)
     {
-        parent::__construct($key, new UrlCaster());
+        parent::__construct($key, new UrlCaster($protocols));
     }
 
     /**

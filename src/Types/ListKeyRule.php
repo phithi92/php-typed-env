@@ -21,9 +21,9 @@ use Phithi92\TypedEnv\Schema\KeyRule;
  */
 final class ListKeyRule extends KeyRule
 {
-    public function __construct(string $key, string $delimiter = ',', bool $allowEmpty = false)
+    public function __construct(string $key, string $delimiter = ',', bool $filterEmpty = false)
     {
-        parent::__construct($key, new ListCaster($delimiter, $allowEmpty));
+        parent::__construct($key, new ListCaster($delimiter, $filterEmpty));
     }
 
     /**

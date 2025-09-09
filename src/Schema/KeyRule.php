@@ -11,22 +11,21 @@ use Phithi92\TypedEnv\Exception\ConstraintException;
 
 /**
  * KeyRule with fluent configuration and runtime apply().
- * - Constructor accepts only the key.
- * - Provides type*() methods.
- * - apply() casts only when input is a string; otherwise runs constraints.
+ * - Constructor accepts only the key (and optional caster).
+ * - Casts only when input is a string; otherwise runs constraints.
  */
 abstract class KeyRule
 {
     /** Optional caster used to convert raw values to the expected type */
     private ?CasterInterface $caster = null;
 
-    /** @var list<ConstraintInterface> List of validation constraints applied to the value */
+    /** @var list<ConstraintInterface> Validation constraints applied to the value */
     private array $constraints = [];
 
-    /** Indicates whether the environment variable is required */
+    /** Whether the environment variable is required */
     private bool $required = true;
 
-    /** Indicates whether a default value has been explicitly set */
+    /** Whether a default value has been explicitly set */
     private bool $hasDefault = false;
 
     /** Holds the default value (typed or untyped) */
@@ -35,93 +34,74 @@ abstract class KeyRule
     /** Name of the environment variable key */
     private string $key;
 
-    /**
-     * Initialize the rule for a specific environment key.
-     *
-     * @param string $key Name of the environment variable.
-     */
+    /** Cache for validated default */
+    private bool $defaultValidated = false;
+    private mixed $validatedDefault = null;
+
     public function __construct(string $key, ?CasterInterface $caster = null)
     {
         $this->key = $key;
-
         if ($caster !== null) {
             $this->caster = $caster;
         }
     }
 
-    /**
-     * Mark the environment variable as not required.
-     */
+    /** Mark the variable as not required */
     public function optional(): static
     {
         $this->required = false;
+
         return $this;
     }
 
     /**
      * Define a default value and mark the variable as optional.
-     *
-     * @param mixed $value Default value to use when variable is missing.
      */
     public function default(mixed $value): static
     {
         $this->hasDefault = true;
         $this->default = $value;
         $this->required = false;
+        $this->invalidateDefaultCache();
+
         return $this;
     }
 
-    /**
-     * Assign a caster to transform the raw value.
-     *
-     * @param CasterInterface $caster Caster responsible for type conversion.
-     */
+    /** Assign a caster to transform the raw value */
     public function setCaster(CasterInterface $caster): static
     {
         $this->caster = $caster;
+        $this->invalidateDefaultCache();
+
         return $this;
     }
 
-    /**
-     * Append a validation constraint.
-     *
-     * @param ConstraintInterface $constraint Constraint to apply.
-     */
+    /** Add a validation constraint */
     public function addConstraint(ConstraintInterface $constraint): static
     {
         $this->constraints[] = $constraint;
+        $this->invalidateDefaultCache();
+
         return $this;
     }
 
     // ---- Meta getters ------------------------------------------------------
 
-    /**
-     * Determine if the variable is required.
-     */
     public function isRequired(): bool
     {
         return $this->required;
     }
 
-    /**
-     * Check whether a default value is set.
-     */
     public function hasDefault(): bool
     {
         return $this->hasDefault;
     }
 
-    /**
-     * Retrieve the default value.
-     */
     public function getDefault(): mixed
     {
         return $this->default;
     }
 
-    /**
-     * Get the environment variable name.
-     */
     public function key(): string
     {
         return $this->key;
@@ -132,34 +112,58 @@ abstract class KeyRule
     /**
      * Apply the caster and all constraints.
      * Cast only when the raw value is a string; otherwise only constraints are applied.
-     *
-     * @param mixed $raw Raw environment value.
-     *
-     * @return mixed Cast and validated value.
      */
     public function apply(mixed $raw): mixed
     {
-        $isMissing = $this->isMissingRaw($raw);
-        if ($isMissing) {
-            if ($this->hasDefault) {
-                return $this->default;
-            }
+        if ($this->isMissingRaw($raw)) {
+            return $this->resolveMissing();
+        }
+
+        // Delegate both string and non-string inputs to the unified pipeline.
+        // Strings will be cast first; non-strings will skip casting and only run constraints.
+        return $this->validatePipeline($raw);
+    }
+
+    /**
+     * Handle missing input: either throw (if required), return null, or return cached validated default.
+     */
+    private function resolveMissing(): mixed
+    {
+        // Fast path if no default is set
+        if (! $this->hasDefault) {
             if ($this->required) {
                 throw new ConstraintException(sprintf('ENV %s is required but missing', $this->key));
             }
             return null;
         }
 
-        if (is_string($raw)) {
-            // Fallback to StringCaster if no caster was set
-            $this->caster ??= new Caster\StringCaster();
-
-            $value = $this->caster->cast($this->key, $raw);
-        } else {
-            // Already typed default or previously validated value
-            $value = $raw;
+        // Default present: validate once and cache
+        if (! $this->defaultValidated) {
+            $this->validatedDefault = $this->validatePipeline($this->default);
+            $this->defaultValidated = true;
         }
 
+        return $this->validatedDefault;
+    }
+
+    /**
+     * Run casting (only if string) and constraints.
+     */
+    private function validatePipeline(mixed $value): mixed
+    {
+        if (is_string($value)) {
+            $this->caster ??= new Caster\StringCaster();
+            $value = $this->caster->cast($this->key, $value);
+        }
+
+        return $this->runConstraints($value);
+    }
+
+    /**
+     * Run only constraints.
+     */
+    private function runConstraints(mixed $value): mixed
+    {
         foreach ($this->constraints as $c) {
             $value = $c->assert($this->key, $value);
         }
@@ -188,5 +192,12 @@ abstract class KeyRule
         }
 
         return false;
+    }
+
+    /** Reset the validated default cache */
+    private function invalidateDefaultCache(): void
+    {
+        $this->defaultValidated = false;
+        $this->validatedDefault = null;
     }
 }
