@@ -9,7 +9,7 @@ use Phithi92\TypedEnv\Exception\CastException;
 
 final class UrlPathCaster implements CasterInterface
 {
-    private const URL_PATH_REGEX = '/^(\/[A-Za-z0-9._~\-\/%]*)$/';
+    private const URL_PATH_REGEX = '#^/(?:[A-Za-z0-9._~%-]+(?:/[A-Za-z0-9._~%-]+)*)?/?$#';
 
     public function cast(string $key, string $raw): string
     {

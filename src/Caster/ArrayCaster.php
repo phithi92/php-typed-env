@@ -18,12 +18,16 @@ final class ArrayCaster implements CasterInterface
 {
     private readonly string $delimiter;
 
-    public function __construct(string $delimiter)
+    private readonly bool $filterEmpty;
+
+    public function __construct(string $delimiter, bool $filterEmpty = false)
     {
         if ($delimiter === '') {
             throw new CastException('Delimiter for ArrayCaster cannot be empty.');
         }
+
         $this->delimiter = $delimiter;
+        $this->filterEmpty = $filterEmpty;
     }
 
     /**
@@ -41,7 +45,7 @@ final class ArrayCaster implements CasterInterface
             return [];
         }
 
-        return $this->filteredValues($key, $value);
+        return $this->splitAndFilterParts($key, $value);
     }
 
     /**
@@ -49,15 +53,18 @@ final class ArrayCaster implements CasterInterface
      *
      * @throws CastException
      */
-    private function filteredValues(string $key, string $value): array
+    private function splitAndFilterParts(string $key, string $value): array
     {
         $parts = array_map('trim', explode($this->delimiter, $value));
 
-        $filtered = array_filter($parts, static fn ($v) => $v !== '');
-        if (count($filtered) === 0) {
+        if ($this->filterEmpty) {
+            $parts = array_filter($parts, static fn ($v) => $v !== '');
+        }
+
+        if (count($parts) === 0) {
             throw new CastException("ENV {$key}: cannot cast '{$value}' to array (empty values only).");
         }
 
-        return $filtered;
+        return $parts;
     }
 }

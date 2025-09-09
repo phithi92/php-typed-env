@@ -25,7 +25,7 @@ final class DurationCaster implements CasterInterface
     }
 
     /**
-     * @param string $key   Environment variable name
+     * @param string $key Environment variable name
      * @param string $raw Environment variable raw value
      */
     public function cast(string $key, string $raw): int|DateInterval
@@ -58,7 +58,7 @@ final class DurationCaster implements CasterInterface
             return new DateInterval('PT' . $seconds . 'S');
         }
 
-        return $seconds; // int Sekunden
+        return $seconds; // int seconds
     }
 
     private function applyRounding(float $seconds): int

@@ -10,16 +10,16 @@ use Phithi92\TypedEnv\Exception\CastException;
 final class ListCaster implements CasterInterface
 {
     private readonly string $delimiter;
-    private readonly bool $allowEmpty;
+    private readonly bool $filterEmpty;
 
-    public function __construct(string $delimiter, bool $allowEmpty)
+    public function __construct(string $delimiter, bool $filterEmpty)
     {
         if ($delimiter === '') {
             throw new CastException('Delimiter must not be empty');
         }
 
         $this->delimiter = $delimiter;
-        $this->allowEmpty = $allowEmpty;
+        $this->filterEmpty = $filterEmpty;
     }
 
     /** @return list<string> */
@@ -31,8 +31,8 @@ final class ListCaster implements CasterInterface
         }
 
         $parts = array_map('trim', $data);
-        if (! $this->allowEmpty) {
-            $parts = array_values(array_filter($parts, static fn ($x) => $x !== ''));
+        if ($this->filterEmpty) {
+            return array_values(array_filter($parts, static fn ($x) => $x !== ''));
         }
 
         return $parts;

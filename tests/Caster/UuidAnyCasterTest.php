@@ -5,24 +5,51 @@ declare(strict_types=1);
 namespace Phithi92\TypedEnv\Tests\Caster;
 
 use PHPUnit\Framework\TestCase;
-use Phithi92\TypedEnv\KeyRule;
+use Phithi92\TypedEnv\Caster\UuidAnyCaster;
 use Phithi92\TypedEnv\Exception\CastException;
 
 final class UuidAnyCasterTest extends TestCase
 {
-    public function testValidUuid(): void
+    private const VALID_CASES = [
+        // v1: version nibble ist "1"
+        'valid v1' => ['123e4567-e89b-11d3-a456-426614174000', false],
+        // v4: version nibble ist "4"
+        'valid v4' => ['123e4567-e89b-42d3-a456-426614174000', true],
+    ];
+
+    private const INVALID_CASES = [
+        'wrong format'  => 'not-a-uuid',
+        'missing parts' => '123e4567-e89b-42d3-a456',
+        'too short'     => '123e4567-e89b-42d3-a456-42661417400',
+        'too long'      => '123e4567-e89b-42d3-a456-426614174000abcd',
+        'bad hex chars' => '123e4567-e89b-42d3-a456-42661417400Z',
+    ];
+
+    public function testValidUuids(): void
     {
-        $r = (new KeyRule('ID'))->typeUuidAny();
-        self::assertSame(
-            '550e8400-e29b-11d4-a716-446655440000',
-            $r->apply('550e8400-e29b-11d4-a716-446655440000')
-        );
+
+        foreach (self::VALID_CASES as $label => [$input,$uuidv4]) {
+            $caster = new UuidAnyCaster($uuidv4);
+
+            $this->assertSame(
+                strtolower($input),
+                $caster->cast('ID', $input),
+                "Failed asserting valid UUID for case: {$label}"
+            );
+        }
     }
 
-    public function testInvalidUuid(): void
+    public function testInvalidUuids(): void
     {
-        $r = (new KeyRule('ID'))->typeUuidAny();
-        $this->expectException(CastException::class);
-        $r->apply('not-a-uuid');
+        $caster = new UuidAnyCaster(true);
+
+        foreach (self::INVALID_CASES as $label => $input) {
+            try {
+                $caster->cast('ID', $input);
+                $this->fail("Expected CastException for case: {$label}");
+            } catch (CastException $e) {
+                $this->assertTrue(true, "Caught expected exception for case: {$label}");
+            }
+        }
     }
 }

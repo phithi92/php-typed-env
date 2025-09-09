@@ -4,25 +4,33 @@ declare(strict_types=1);
 
 namespace Phithi92\TypedEnv\Tests\Caster;
 
-use PHPUnit\Framework\TestCase;
-use Phithi92\TypedEnv\KeyRule;
+use DateTimeInterface;
 use DateTimeImmutable;
+use DateTime;
+use PHPUnit\Framework\TestCase;
+use Phithi92\TypedEnv\Caster\DateTimeCaster;
 use Phithi92\TypedEnv\Exception\CastException;
 
 final class DateTimeCasterTest extends TestCase
 {
-    public function testValidDateTimeImmutable(): void
+    public function testDateTimeCasterReturnsDateTime()
     {
-        $r = (new KeyRule('D'))->typeDateTime('Y-m-d', true);
-        $dt = $r->apply('2024-12-31');
-        self::assertInstanceOf(DateTimeImmutable::class, $dt);
-        self::assertSame('2024-12-31', $dt->format('Y-m-d'));
+        $caster = new DateTimeCaster(DateTimeInterface::ATOM, true);
+        $dt = $caster->cast('DT', '2024-01-31T10:00:00+00:00');
+        $this->assertInstanceOf(DateTimeImmutable::class, $dt);
     }
 
-    public function testInvalidDate(): void
+    public function testDateTimeCasterReturnsDateTimeImmutable()
     {
-        $r = (new KeyRule('D'))->typeDateTime('Y-m-d');
+        $caster = new DateTimeCaster(DateTimeInterface::ATOM, false);
+        $dt = $caster->cast('DT', '2024-01-31T10:00:00+00:00');
+        $this->assertInstanceOf(DateTime::class, $dt);
+    }
+
+    public function testDateTimeCasterWithInvalidValue(): void
+    {
+        $caster = new DateTimeCaster(DateTimeInterface::ATOM, true);
         $this->expectException(CastException::class);
-        $r->apply('2024-02-30');
+        $caster->cast('DT', 'bad');
     }
 }

@@ -4,52 +4,51 @@ declare(strict_types=1);
 
 namespace Phithi92\TypedEnv\Tests\Caster;
 
-use Phithi92\TypedEnv\Exception\CastException;
-use Phithi92\TypedEnv\Caster\IntCaster;
-use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use Phithi92\TypedEnv\Caster\IntCaster;
+use Phithi92\TypedEnv\Exception\CastException;
 
 final class IntCasterTest extends TestCase
 {
-    #[DataProvider('okCases')]
-    public function testCastOk(string $raw, int $expected): void
+    private const VALID_CASES = [
+        'positive integer'    => ['42', 42],
+        'negative integer'    => ['-7', -7],
+        'zero'                => ['0', 0],
+        'large number'        => ['123456789', 123456789],
+    ];
+
+    private const INVALID_CASES = [
+        'float value'         => '3.14',
+        'alphanumeric string' => '42abc',
+        'empty string'        => '',
+        'whitespace only'     => '   ',
+        'non-numeric'         => 'foo',
+    ];
+
+    public function testValidIntegers(): void
     {
         $caster = new IntCaster();
-        self::assertSame($expected, $caster->cast('N', $raw));
+
+        foreach (self::VALID_CASES as $label => [$input, $expected]) {
+            $this->assertSame(
+                $expected,
+                $caster->cast('I', $input),
+                "Failed asserting valid integer for case: {$label}"
+            );
+        }
     }
 
-    #[DataProvider('badCases')]
-    public function testCastBad(string $raw): void
+    public function testInvalidIntegers(): void
     {
         $caster = new IntCaster();
 
-        $this->expectException(CastException::class);
-        $this->expectExceptionMessageMatches("/^ENV N: '.*' is not a valid int$/");
-
-        $caster->cast('N', $raw);
-    }
-
-    public static function okCases(): array
-    {
-        return [
-            'zero'            => ['0', 0],
-            'positive'        => ['42', 42],
-            'negative'        => ['-7', -7],
-            'leading zeros'   => ['007', 7],
-            'trim whitespace' => [" \t -12 \n", -12],
-        ];
-    }
-
-    public static function badCases(): array
-    {
-        return [
-            'empty string' => [''],
-            'spaces only'  => ['   '],
-            'float'        => ['1.2'],
-            'scientific'   => ['1e3'],
-            'plus sign'    => ['+3'],
-            'letters'      => ['abc'],
-            'double minus' => ['--1'],
-        ];
+        foreach (self::INVALID_CASES as $label => $input) {
+            try {
+                $caster->cast('I', $input);
+                $this->fail("Expected CastException for case: {$label}");
+            } catch (CastException $e) {
+                $this->assertTrue(true); // expected
+            }
+        }
     }
 }

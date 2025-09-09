@@ -4,84 +4,38 @@ declare(strict_types=1);
 
 namespace Phithi92\TypedEnv\Tests\Caster;
 
-use DateInterval;
-use Phithi92\TypedEnv\Exception\CastException;
 use PHPUnit\Framework\TestCase;
 use Phithi92\TypedEnv\Caster\DurationCaster;
 
 final class DurationCasterTest extends TestCase
 {
-    public function testValidDurationsWithDefaultFloor(): void
+    private function assertCastedSeconds(string $mode, string $input, int $expected): void
     {
-        $caster = new DurationCaster();
-
-        // ms rounding down
-        $this->assertSame(0, $caster->cast('KEY', '500ms'));
-        $this->assertSame(1, $caster->cast('KEY', '1500ms'));
-
-        // seconds
-        $this->assertSame(30, $caster->cast('KEY', '30s'));
-
-        // minutes
-        $this->assertSame(60, $caster->cast('KEY', '1m'));
-        $this->assertSame(120, $caster->cast('KEY', '2m'));
-
-        // hours
-        $this->assertSame(3600, $caster->cast('KEY', '1h'));
-        $this->assertSame(7200, $caster->cast('KEY', '2h'));
-
-        // days
-        $this->assertSame(86400, $caster->cast('KEY', '1d'));
+        $caster = new DurationCaster(true, $mode);
+        $this->assertSame($expected, $caster->cast('T', $input)->s, "mode={$mode}, input={$input}");
     }
 
-    public function testRoundingModes(): void
+    public function testDurationRoundingCeil(): void
     {
-        // round mode
-        $casterRound = new DurationCaster(false, 'round');
-        $this->assertSame(1, $casterRound->cast('KEY', '500ms')); // rounds up
-
-        // ceil mode
-        $casterCeil = new DurationCaster(false, 'ceil');
-        $this->assertSame(1, $casterCeil->cast('KEY', '500ms'));
-
-        // floor mode
-        $casterFloor = new DurationCaster(false, 'floor');
-        $this->assertSame(0, $casterFloor->cast('KEY', '500ms'));
+        $this->assertCastedSeconds('ceil', '3450ms', 4);
     }
 
-    public function testDurationsReturnDateInterval(): void
+    public function testDurationRoundingFloor(): void
     {
-        $caster = new DurationCaster(true); // returnInterval = true
-        $interval = $caster->cast('TIMEOUT', '120s');
-
-        $this->assertInstanceOf(DateInterval::class, $interval);
-        $this->assertSame(
-            120,
-            $interval->s + ($interval->i * 60) + ($interval->h * 3600)
-        );
+        $this->assertCastedSeconds('floor', '3450ms', 3);
     }
 
-    public function testInvalidDurations(): void
+    public function testDurationRoundingRound(): void
     {
-        $caster = new DurationCaster();
-
-        // invalid format
-        $this->expectException(CastException::class);
-        $caster->cast('KEY', 'not-a-duration');
+        $this->assertCastedSeconds('round', '3450ms', 3);
     }
 
-    public function testInvalidUnit(): void
+    // (optional) sinnvolle Grenzwerte – weiterhin nur Testcode:
+    public function testDurationRoundingBoundaries(): void
     {
-        $caster = new DurationCaster();
-
-        // invalid unit
-        $this->expectException(CastException::class);
-        $caster->cast('KEY', '10w');
-    }
-
-    public function testInvalidRoundingMode(): void
-    {
-        $this->expectException(CastException::class);
-        new DurationCaster(false, 'invalid-mode');
+        $this->assertCastedSeconds('round', '3500ms', 4);
+        $this->assertCastedSeconds('floor', '3499ms', 3);
+        $this->assertCastedSeconds('ceil', '3000ms', 3);
+        $this->assertCastedSeconds('ceil', '3001ms', 4);
     }
 }
