@@ -9,17 +9,28 @@ declare(strict_types=1);
 
 namespace Phithi92\TypedEnv\Contracts;
 
+use Phithi92\TypedEnv\Exception\HandlerException;
+
 interface HandlerInterface
 {
+    /**
+     * @throws HandlerException
+     */
     public function __construct(mixed $value);
 
     public function rewind(): void;
 
     public function current(): int;
 
+    /**
+     * @throws HandlerException
+     */
     public function write(string $value): void;
 
-    public function read(): string|null;
+    /**
+     * @throws HandlerException
+     */
+    public function read(): ?string;
 
     public function hasMore(): bool;
 }

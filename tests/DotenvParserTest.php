@@ -58,16 +58,18 @@ final class DotenvParserTest extends TestCase
         $path = $this->writeTemp("export FOO=bar\n   export   BAR= baz\n");
 
         // aktiviert: export wird entfernt
-        $parser = new DotenvParser(new FileHandler($path), new DotenvParserConfig(allowExport: true));
+        $parser = new DotenvParser(
+            new FileHandler($path),
+            new DotenvParserConfig(allowExport: true)
+        );
         $data   = $parser->parse();
         $this->assertSame('bar', $data['FOO']);
         $this->assertSame('baz', $data['BAR']);
 
         // deaktiviert: export bleibt Teil des Keys (reines Parser-Verhalten)
         $parserNo = new DotenvParser(new FileHandler($path), new DotenvParserConfig(allowExport: false));
+        $this->expectException(DotenvSyntaxException::class);
         $raw      = $parserNo->parse();
-        $this->assertArrayHasKey('export FOO', $raw);
-        $this->assertSame('bar', $raw['export FOO']);
     }
 
     public function testInlineCommentsRemovedOnlyWhenEnabledAndNotQuoted(): void
@@ -79,14 +81,14 @@ final class DotenvParserTest extends TestCase
             ENV);
 
         // aktiviert: trailing # nach value (ohne quotes) wird entfernt
-        $parser = new DotenvParser(new FileHandler($path), new DotenvParserConfig(allowInlineComments: true));
+        $parser = new DotenvParser(new FileHandler($path), new DotenvParserConfig(allowValueComments: true));
         $data   = $parser->parse();
         $this->assertSame('foo', $data['RAW']);
         $this->assertSame('foo # not a comment', $data['QUOTED']); // quotes bleiben Inhalt
         $this->assertSame('bar # also not a comment', $data['SINGLE']);
 
         // deaktiviert: nichts wird abgeschnitten
-        $parserOff = new DotenvParser(new FileHandler($path), new DotenvParserConfig(allowInlineComments: false));
+        $parserOff = new DotenvParser(new FileHandler($path), new DotenvParserConfig(allowValueComments: false));
         $raw       = $parserOff->parse();
         $this->assertSame('foo # trailing', $raw['RAW']);
     }
@@ -119,5 +121,146 @@ final class DotenvParserTest extends TestCase
 
         $this->expectException(DotenvSyntaxException::class);
         (new DotenvParser(new FileHandler($path)))->parse($path);
+    }
+
+    public function testParsesNestedSections(): void
+    {
+        $path = $this->writeTemp(<<<'ENV'
+            [app]
+            name = demo
+            [app.db]
+            host = localhost
+            [app.db.replica]
+            host = replica
+            ENV);
+
+        $parser = new DotenvParser(new FileHandler($path));
+        $data   = $parser->parse();
+
+        $this->assertSame([
+            'app' => [
+                'name' => 'demo',
+                'db'   => [
+                    'host'    => 'localhost',
+                    'replica' => ['host' => 'replica'],
+                ],
+            ],
+        ], $data);
+    }
+
+    public function testReentersParentSectionAndKeepsSiblings(): void
+    {
+        $path = $this->writeTemp(<<<'ENV'
+            [app]
+            name = demo
+            [app.db]
+            host = localhost
+            [app.cache]
+            driver = redis
+            [app.db]       ; re-enter
+            port = 3306
+            ENV);
+
+        $data = (new DotenvParser(new FileHandler($path)))->parse();
+
+        $this->assertSame([
+            'app' => [
+                'name' => 'demo',
+                'db'   => ['host' => 'localhost', 'port' => '3306'],
+                'cache' => ['driver' => 'redis'],
+            ],
+        ], $data);
+    }
+
+    public function testCreatesMissingParentsForNestedSection(): void
+    {
+        $path = $this->writeTemp(<<<'ENV'
+        [app.db.replica]
+        host = replica
+        ENV);
+
+        $data = (new DotenvParser(new FileHandler($path)))->parse();
+
+        $this->assertSame([
+        'app' => [
+            'db' => [
+                'replica' => ['host' => 'replica'],
+            ],
+        ],
+        ], $data);
+    }
+    public function testSkipsEmptyPathSegments(): void
+    {
+        $path = $this->writeTemp(<<<'ENV'
+        [app..db]
+        host = localhost
+        ENV);
+
+        $data = (new DotenvParser(
+            new FileHandler($path),
+            new DotenvParserConfig(strictMode: false)
+        ))->parse();
+
+        $this->assertSame([
+        'app' => [
+            'db' => ['host' => 'localhost'],
+        ],
+        ], $data);
+    }
+
+    public function testScalarThenBecomesSectionOverwritesScalar(): void
+    {
+        $path = $this->writeTemp(<<<'ENV'
+        app = foo
+        [app.db]
+        host = localhost
+        ENV);
+
+        $data = (new DotenvParser(
+            new FileHandler($path),
+            new DotenvParserConfig(strictMode: false)
+        ))->parse();
+
+        $this->assertSame([
+        'app' => [
+            'db' => ['host' => 'localhost'],
+        ],
+        ], $data);
+    }
+
+
+    public function testIgnoresCommentsAndBlankLines(): void
+    {
+        $path = $this->writeTemp(<<<'ENV'
+        # comment
+        [app]    ; inline comment allowed?
+        
+        name = demo   # trailing comment
+        ENV);
+
+        $data = (new DotenvParser(
+            new FileHandler($path),
+            new DotenvParserConfig(allowValueComments: true)
+        ))->parse();
+
+        $this->assertSame(['app' => ['name' => 'demo']], $data);
+    }
+
+    public function testLaterKeyOverridesEarlierKeyInSameSection(): void
+    {
+        $path = $this->writeTemp(<<<'ENV'
+        [app]
+        name = demo
+        name = demo2
+        ENV);
+
+
+
+        $data = (new DotenvParser(new FileHandler($path), new DotenvParserConfig(
+            allowValueComments: false,
+            strictMode: false
+        )))->parse();
+
+        $this->assertSame(['app' => ['name' => 'demo2']], $data);
     }
 }
